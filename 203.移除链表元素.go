@@ -72,4 +72,3 @@ func removeElements(head *ListNode, val int) *ListNode {
 }
 
 // @lc code=end
-

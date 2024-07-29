@@ -152,4 +152,3 @@ func (this *MyLinkedList) DeleteAtIndex(index int) {
  * obj.DeleteAtIndex(index);
  */
 // @lc code=end
-

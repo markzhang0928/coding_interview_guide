@@ -147,4 +147,3 @@ func getIntersectionNode(headA, headB *ListNode) *ListNode {
 }
 
 // @lc code=end
-

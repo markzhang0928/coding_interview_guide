@@ -87,4 +87,3 @@ func removeNthFromEnd(head *ListNode, n int) *ListNode {
 }
 
 // @lc code=end
-
