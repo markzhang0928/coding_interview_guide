@@ -70,85 +70,87 @@
 
 // @lc code=start
 type LRUCache struct {
-	size       int
-	capacity   int
-	cache      map[int]*LRUNode
-	head, tail *LRUNode
+	lock         *sync.Mutex
+	evictionList list.List
+
+	maxSize int
+	entries map[int]*list.Element
 }
 
-type LRUNode struct {
-	key, value int
-	prev, next *LRUNode
+func Constructor(maxSize int) LRUCache {
+	if maxSize <= 0 {
+		panic("maxSize must be > 0 ")
+	}
+
+	return LRUCache{
+		lock:    new(sync.Mutex),
+		maxSize: maxSize,
+		entries: map[int]*list.Element{},
+	}
 }
 
-func initDLinkedNode(key, value int) *DLinkedNode {
-	return &DLinkedNode{
+type cacheEntry struct {
+	key   int
+	value int
+}
+
+func (c *LRUCache) Get(key int) int {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	element, ok := c.entries[key]
+	if !ok {
+		return -1
+	}
+
+	c.evictionList.MoveToFront(element)
+	return element.Value.(*cacheEntry).value
+}
+
+func (c *LRUCache) Put(key int, value int) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	oldElement, ok := c.entries[key]
+	if ok {
+		c.evictionList.MoveToFront(oldElement)
+		oldElement.Value.(*cacheEntry).value = value
+		return
+	}
+
+	if c.evictionList.Len() >= c.maxSize {
+		toEvict := c.evictionList.Back()
+		c.evictionList.Remove(toEvict)
+		delete(c.entries, toEvict.Value.(*cacheEntry).key)
+	}
+
+	entry := &cacheEntry{
 		key:   key,
 		value: value,
 	}
+	element := c.evictionList.PushFront(entry)
+	c.entries[key] = element
 }
 
-func Constructor(capacity int) LRUCache {
-	l := LRUCache{
-		cache:    map[int]*DLinkedNode{},
-		head:     initDLinkedNode(0, 0),
-		tail:     initDLinkedNode(0, 0),
-		capacity: capacity,
+func (c *LRUCache) Remove(key int) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	element, ok := c.entries[key]
+	if !ok {
+		return
 	}
-	l.head.next = l.tail
-	l.tail.prev = l.head
-	return l
+
+	c.evictionList.Remove(element)
+	delete(c.entries, key)
 }
 
-func (this *LRUCache) Get(key int) int {
-	if _, ok := this.cache[key]; !ok {
-		return -1
-	}
-	node := this.cache[key]
-	this.moveToHead(node)
-	return node.value
-}
-
-func (this *LRUCache) Put(key int, value int) {
-	if _, ok := this.cache[key]; !ok {
-		node := initDLinkedNode(key, value)
-		this.cache[key] = node
-		this.addToHead(node)
-		this.size++
-		if this.size > this.capacity {
-			removed := this.removeTail()
-			delete(this.cache, removed.key)
-			this.size--
-		}
-	} else {
-		node := this.cache[key]
-		node.value = value
-		this.moveToHead(node)
-	}
-}
-
-func (this *LRUCache) addToHead(node *DLinkedNode) {
-	node.prev = this.head
-	node.next = this.head.next
-	this.head.next.prev = node
-	this.head.next = node
-}
-
-func (this *LRUCache) removeNode(node *DLinkedNode) {
-	node.prev.next = node.next
-	node.next.prev = node.prev
-}
-
-func (this *LRUCache) moveToHead(node *DLinkedNode) {
-	this.removeNode(node)
-	this.addToHead(node)
-}
-
-func (this *LRUCache) removeTail() *DLinkedNode {
-	node := this.tail.prev
-	this.removeNode(node)
-	return node
-}
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * obj := Constructor(capacity);
+ * param_1 := obj.Get(key);
+ * obj.Put(key,value);
+ */
 
 /**
  * Your LRUCache object will be instantiated and called as such:
