@@ -66,6 +66,7 @@ func findBottomLeftValue(root *TreeNode) int {
 		length := st.Len()
 		for i := 0; i < length; i++ {
 			node := st.Remove(st.Front()).(*TreeNode)
+			// i == 0 表示最左侧节点, 使用队列进行层序遍历
 			if i == 0 {
 				result = node.Val
 			}

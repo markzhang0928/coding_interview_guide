@@ -61,6 +61,7 @@ func maxSubArray(nums []int) int {
 	if len(nums) == 0 {
 		return 0
 	}
+	// maxSum: 最大和 curSum: 连续和
 	maxSum, curSum := nums[0], nums[0]
 	for _, num := range nums[1:] {
 		if curSum < 0 {
